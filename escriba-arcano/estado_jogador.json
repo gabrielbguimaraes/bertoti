@@ -1,20 +1,32 @@
-[
-  {
-    "nome": "Exposto a Doenças",
-    "tipo": "Aflição",
-    "descricao_narrativa": "O aventureiro foi ferido por algo sujo, nojento ou enferrujado. Uma infecção pode estar a caminho.",
-    "efeito_mecanico": "Desvantagem em testes de Constituição até receber tratamento médico."
+{
+  "Grog": {
+    "estresse_atual": 4,
+    "limite_estresse": 10,
+    "tracos_atuais": [
+      "Noturno"
+    ]
   },
-  {
-    "nome": "Cabeça Dura",
-    "tipo": "Virtude",
-    "descricao_narrativa": "O aventureiro aguenta golpes que derrubariam outros. Tomou uma pancada forte na cabeça, como uma pedrada, e continuou lutando.",
-    "efeito_mecanico": "+1 na Classe de Armadura."
+  "Lirael": {
+    "estresse_atual": 0,
+    "limite_estresse": 10,
+    "tracos_atuais": [
+      "Curiosidade Aguçada",
+      "Ganância"
+    ]
   },
-  {
-    "nome": "Imprudente",
-    "tipo": "Aflição",
-    "descricao_narrativa": "Age sem pensar nas consequências. Lambe cogumelos estranhos, bebe poções desconhecidas, puxa alavancas.",
-    "efeito_mecanico": "Desvantagem em testes para evitar armadilhas."
+  "Kaelen": {
+    "estresse_atual": 0,
+    "limite_estresse": 10,
+    "tracos_atuais": []
+  },
+  "biel": {
+    "estresse_atual": 0,
+    "limite_estresse": 10,
+    "tracos_atuais": []
+  },
+  "lukinha": {
+    "tracos_atuais": [
+      "Exposto a Doenças"
+    ]
   }
-]
+}
