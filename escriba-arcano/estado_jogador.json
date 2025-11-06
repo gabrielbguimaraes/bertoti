@@ -1,0 +1,22 @@
+{
+  "Grog": {
+    "estresse_atual": 4,
+    "limite_estresse": 10,
+    "tracos_atuais": [
+      "Noturno"
+    ]
+  },
+  "Lirael": {
+    "estresse_atual": 0,
+    "limite_estresse": 10,
+    "tracos_atuais": [
+      "Curiosidade Aguçada",
+      "Ganância"
+    ]
+  },
+  "Kaelen": {
+    "estresse_atual": 0,
+    "limite_estresse": 10,
+    "tracos_atuais": []
+  }
+}

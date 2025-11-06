@@ -1,5 +1,6 @@
 import json
 from langchain_community.llms import Ollama
+import memoria
 
 try:
     llm = Ollama(model="qwen")
@@ -10,16 +11,14 @@ except Exception as e:
 
 
 def stub_consultar_estado(jogador_nome: str) -> dict:
-    """Função FALSA que simula a FRENTE 3."""
-    print(f"\n[STUB FRENTE 3] Consultando estado de {jogador_nome}...")
-    if jogador_nome.lower() == "grog":
-        return {'tracos_atuais': ['Noturno']}
-    return {'tracos_atuais': []}
+    """Função que delega à memoria.consultar_estado_real (substitui stub)."""
+    print(f"\n[FRONTE 3] Consultando estado de {jogador_nome} via memoria.py...")
+    return memoria.consultar_estado_real(jogador_nome)
 
 def stub_atualizar_estado_jogador(jogador_nome: str, novo_traco: str) -> bool:
-    """Função FALSA que simula a FRENTE 3. (Removemos o estresse)"""
-    print(f"\n[STUB FRENTE 3] ATUALIZANDO {jogador_nome} -> Adicionando Traço: {novo_traco}")
-    return True
+    """Função que delega à memoria.atualizar_estado_real (substitui stub)."""
+    print(f"\n[FRONTE 3] ATUALIZANDO {jogador_nome} -> Adicionando Traço: {novo_traco} via memoria.py...")
+    return memoria.atualizar_estado_real(jogador_nome, novo_traco)
 
 def stub_buscar_traco_relevante(resumo_evento: str) -> dict:
     """Função FALSA que simula a FRENTE 4 (RAG)."""
@@ -57,12 +56,16 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         nome_traco = traco_encontrado['nome']
         estado_atual = stub_consultar_estado(personagem) 
         
-        if nome_traco in estado_atual['tracos_atuais']:
+        if nome_traco in estado_atual.get('tracos_atuais', []):
             msg = f"A experiência de {personagem} reforça um traço existente: **{nome_traco}**."
             print(f"[Agente] Resposta: {msg}")
             return msg
         
-        stub_atualizar_estado_jogador(personagem, nome_traco)
+        atualizado = stub_atualizar_estado_jogador(personagem, nome_traco)
+        if not atualizado:
+            msg = f"O traço {nome_traco} já existia para {personagem} (persistência)."
+            print(f"[Agente] Resposta: {msg}")
+            return msg
 
         if llm is None:
             raise Exception("OLLAMA/QWEN NÃO ESTÁ RODANDO.")
