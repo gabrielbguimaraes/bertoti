@@ -1,11 +1,13 @@
 import json
-import random  # <-- ADICIONADO PARA O D20
+import random
 from langchain_community.llms import Ollama
 import memoria
+# Não vamos mais usar o 'conhecimento.py'
 
 try:
-    llm = Ollama(model="qwen")
-    print("Conexão com Ollama/Qwen estabelecida.")
+    # --- A ÚNICA MUDANÇA ESTÁ AQUI ---
+    llm = Ollama(model="llama3") 
+    print("Conexão com Ollama/Llama3 estabelecida.")
 except Exception as e:
     print(f"FALHA AO CONECTAR NO OLLAMA: {e}")
     llm = None
@@ -58,12 +60,12 @@ def encontrar_traco_com_llm(resumo: str) -> dict:
     Sua Resposta:
     """
     
-    print(f"[Agente IA] Invocando Qwen para ESCOLHER um traço...")
+    print(f"[Agente IA] Invocando Llama3 para ESCOLHER um traço...")
     resposta_llm = llm.invoke(prompt_escolha).strip()
     
     resposta_llm = resposta_llm.replace('"', '').replace("'", "")
     
-    print(f"[Agente IA] Qwen escolheu: '{resposta_llm}'")
+    print(f"[Agente IA] Llama3 escolheu: '{resposta_llm}'")
     
     if resposta_llm.lower() == "nenhum":
         return None
@@ -72,7 +74,7 @@ def encontrar_traco_com_llm(resumo: str) -> dict:
         if traco['nome'].lower() == resposta_llm.lower():
             return traco
             
-    print(f"[Agente IA] AVISO: Qwen escolheu '{resposta_llm}', mas não achei no DB.")
+    print(f"[Agente IA] AVISO: Llama3 escolheu '{resposta_llm}', mas não achei no DB.")
     return None
 
 
@@ -99,7 +101,6 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         print(f"[Agente] Evento ({traco_encontrado['nome']}) detectado. Rolando D20 (CD {gravidade_dc})...")
         
         if d20_roll >= gravidade_dc:
-            # O jogador resistiu ao traço
             msg = (
                 f"Apesar do evento '{traco_encontrado['nome']}', {personagem} resistiu (D20: {d20_roll})!"
                 f"\nO traço **não** foi aplicado."
@@ -108,7 +109,6 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
             return msg
             
         print(f"[Agente] Falhou no teste (D20: {d20_roll}). O traço será aplicado.")
-        # --- FIM DA LÓGICA DO D20 ---
 
         # 3. AGENTE chama MEMÓRIA (FRENTE 3)
         nome_traco = traco_encontrado['nome']
@@ -118,10 +118,9 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         if isinstance(estado_jogador, dict):
             lista_de_tracos_atuais = estado_jogador.get('tracos_atuais', [])
         elif isinstance(estado_jogador, list):
-            lista_de_tracos_atuais = estado_jogador # Bug: FRENTE 3 retornou só a lista
+            lista_de_tracos_atuais = estado_jogador 
         else:
             lista_de_tracos_atuais = []
-        # --- FIM DA CORREÇÃO DO BUG ---
 
         # 4. AGENTE toma a decisão (Lógica)
         if nome_traco in lista_de_tracos_atuais:
@@ -132,7 +131,6 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         # 5. É um TRAÇO NOVO!
         atualizado = atualizar_estado_real(personagem, nome_traco)
         if not atualizado:
-            # Backup (caso a lógica de 'adicionar_traco' retorne False)
             msg = f"A experiência de {personagem} reforça um traço existente: **{nome_traco}**."
             print(f"[Agente] Resposta: {msg}")
             return msg
@@ -152,7 +150,7 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         Anuncie a falha no teste, o novo traço adquirido e seu efeito.
         """
 
-        print(f"[Agente IA] Invocando Qwen para gerar a narrativa...")
+        print(f"[Agente IA] Invocando Llama3 para gerar a narrativa...")
         resposta_narrativa = llm.invoke(prompt_nli)
         
         print(f"[Agente IA] Resposta NLI gerada.")
@@ -165,9 +163,9 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
 # --- Bloco de Teste ---
 if __name__ == "__main__":
     if llm is not None and TRACOS_DB:
-        print("--- INICIANDO TESTE DO AGENTE (FRENTE 1) - NLI v2.0 ---")
+        print("--- INICIANDO TESTE DO AGENTE (FRENTE 1) - NLI v2.0 com Llama3 ---")
         
-        print("\n\n--- TESTE 1: RESUMO NEUTRO (Qwen deve dizer 'Nenhum') ---")
+        print("\n\n--- TESTE 1: RESUMO NEUTRO (Llama3 deve dizer 'Nenhum') ---")
         resultado1 = processar_narrativa_mestre(
             personagem="Grog", 
             resumo="Grog tomou um café e leu um livro."
@@ -175,7 +173,7 @@ if __name__ == "__main__":
         print("\n--- RESULTADO FINAL (Teste 1) ---")
         print(resultado1)
         
-        print("\n\n--- TESTE 2: RESUMO 'FACA' (Qwen deve ACHAR algo) ---")
+        print("\n\n--- TESTE 2: RESUMO 'FACA' (Llama3 deve ACHAR 'Exposto a Doenças') ---")
         resultado3 = processar_narrativa_mestre(
             personagem="Biel",
             resumo="biel tomou uma pedrada na cabeça na dungeon durante uma luta, matou um orc bem grande mas tomou um corte de uma faca enferrujada"
@@ -183,7 +181,7 @@ if __name__ == "__main__":
         print("\n--- RESULTADO FINAL (Teste 2) ---")
         print(resultado3)
         
-        print("\n\n--- TESTE 3: RESUMO 'COGUMELO' (Qwen deve ACHAR 'Imprudente') ---")
+        print("\n\n--- TESTE 3: RESUMO 'COGUMELO' (Llama3 deve ACHAR 'Imprudente') ---")
         resultado4 = processar_narrativa_mestre(
             personagem="Biel",
             resumo="biel lambeu um cogumelo estranho na caverna"
