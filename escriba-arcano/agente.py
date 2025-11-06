@@ -1,7 +1,9 @@
 import json
 from langchain_community.llms import Ollama
 import memoria
+import conhecimento
 
+# Tenta conectar ao Ollama (LLM)
 try:
     llm = Ollama(model="qwen")
     print("Conexão com Ollama/Qwen estabelecida.")
@@ -9,64 +11,73 @@ except Exception as e:
     print(f"FALHA AO CONECTAR NO OLLAMA: {e}")
     llm = None
 
+# --- Wrapper da FRENTE 3 (Memória) ---
 
-def stub_consultar_estado(jogador_nome: str) -> dict:
-    """Função que delega à memoria.consultar_estado_real (substitui stub)."""
-    print(f"\n[FRONTE 3] Consultando estado de {jogador_nome} via memoria.py...")
-    return memoria.consultar_estado_real(jogador_nome)
+def consultar_estado_real(jogador_nome: str) -> dict:
+    """Delega a chamada para memoria.py"""
+    print(f"\n[FRENTE 3] Consultando estado de {jogador_nome} via memoria.py...")
+    return memoria.consultar_estado_real(jogador_nome) 
 
-def stub_atualizar_estado_jogador(jogador_nome: str, novo_traco: str) -> bool:
-    """Função que delega à memoria.atualizar_estado_real (substitui stub)."""
-    print(f"\n[FRONTE 3] ATUALIZANDO {jogador_nome} -> Adicionando Traço: {novo_traco} via memoria.py...")
+def atualizar_estado_real(jogador_nome: str, novo_traco: str) -> bool:
+    """Delega a chamada para memoria.py"""
+    print(f"\n[FRENTE 3] ATUALIZANDO {jogador_nome} -> Adicionando Traço: {novo_traco} via memoria.py...")
     return memoria.atualizar_estado_real(jogador_nome, novo_traco)
 
-def stub_buscar_traco_relevante(resumo_evento: str) -> dict:
-    """Função FALSA que simula a FRENTE 4 (RAG)."""
-    print(f"\n[STUB FRENTE 4] Buscando traço para: '{resumo_evento}'...")
-    if "aranha" in resumo_evento.lower() or "apavorado" in resumo_evento.lower():
-        return {
-            'nome': 'Aracnofobia', 'tipo': 'Aflição',
-            'descricao_narrativa': 'Pavor de aranhas.',
-            'efeito_mecanico': 'Desvantagem contra aranhas.'
-        }
-    if "corajoso" in resumo_evento.lower():
-        return {
-            'nome': 'Coragem Inabalável', 'tipo': 'Virtude',
-            'descricao_narrativa': 'Você viu o abismo e não piscou.',
-            'efeito_mecanico': '+1 em salvaguardas contra Medo.'
-        }
+# --- Wrapper da FRENTE 4 (Conhecimento) ---
 
-    return None
+def buscar_traco_relevante_real(resumo_evento: str) -> dict:
+    """Delega a chamada para conhecimento.py e trata a resposta."""
+    print(f"\n[FRENTE 4] Buscando traço via conhecimento.py...")
+    
+    # Chama a função real da FRENTE 4
+    resultado = conhecimento.buscar_traco_relevante(resumo_evento)
+    
+    # "Tradução" da resposta: A FRENTE 4 retorna {'erro':...} se não achar nada.
+    # Esta função converte isso para 'None' para o resto da lógica funcionar.
+    if 'erro' in resultado:
+        print(f"[FRENTE 4] {resultado['erro']}")
+        return None  
+    
+    return resultado
 
+# --- FRENTE 1: O AGENTE ORQUESTRADOR (NLI) ---
 
 def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
     """
-    Esta é a função principal que o bot do Discord (FRENTE 2) irá chamar.
-    O "Agente" aqui é esta própria função, que orquestra as Frentes 3, 4 e o LLM.
+    Função principal do Agente.
+    Orquestra as Frentes 3 (memoria), 4 (conhecimento) e o LLM.
     """
     print(f"\n--- Processando narrativa para {personagem} (Agente NLI) ---")
     try:
-        traco_encontrado = stub_buscar_traco_relevante(resumo)
+        # 1. AGENTE chama RAG (FRENTE 4)
+        traco_encontrado = buscar_traco_relevante_real(resumo)
         
+        # 2. AGENTE analisa a resposta do RAG
         if traco_encontrado is None:
             msg = f"O Mestre narra o evento de {personagem}, mas nada profundamente marcante acontece."
             print(f"[Agente] Resposta: {msg}")
             return msg
         
+        # 3. AGENTE chama MEMÓRIA (FRENTE 3)
         nome_traco = traco_encontrado['nome']
-        estado_atual = stub_consultar_estado(personagem) 
+        estado_atual = consultar_estado_real(personagem) 
         
+        # 4. AGENTE toma a decisão (Lógica)
         if nome_traco in estado_atual.get('tracos_atuais', []):
             msg = f"A experiência de {personagem} reforça um traço existente: **{nome_traco}**."
             print(f"[Agente] Resposta: {msg}")
             return msg
         
-        atualizado = stub_atualizar_estado_jogador(personagem, nome_traco)
+        # 5. É um TRAÇO NOVO!
+        # 5a. Salvar o novo traço (FRENTE 3)
+        atualizado = atualizar_estado_real(personagem, nome_traco)
         if not atualizado:
-            msg = f"O traço {nome_traco} já existia para {personagem} (persistência)."
+            # A FRENTE 3 (memoria.py) retorna False se o traço já existia
+            msg = f"A experiência de {personagem} reforça um traço existente: **{nome_traco}**."
             print(f"[Agente] Resposta: {msg}")
             return msg
 
+        # 5b. Gerar a resposta NLI (Chamar o LLM)
         if llm is None:
             raise Exception("OLLAMA/QWEN NÃO ESTÁ RODANDO.")
             
@@ -93,10 +104,11 @@ def processar_narrativa_mestre(personagem: str, resumo: str) -> str:
         print(f"Erro no Agente: {e}")
         return f"Ocorreu um erro: {e}"
 
+# --- Bloco de Teste para rodar o 'agente.py' sozinho ---
 
 if __name__ == "__main__":
     if llm is not None:
-        print("--- INICIANDO TESTE DO AGENTE (FRENTE 1) - NLI PURO ---")
+        print("--- INICIANDO TESTE DO AGENTE (FRENTE 1) - INTEGRADO ---")
         
         print("\n\n--- TESTE 1: RESUMO NEUTRO ---")
         resultado1 = processar_narrativa_mestre(
@@ -114,33 +126,17 @@ if __name__ == "__main__":
         print("\n--- RESULTADO FINAL (Teste 2) ---")
         print(resultado2)
         
-        stub_original = stub_buscar_traco_relevante
-        
-        def stub_para_teste_3(resumo_evento: str):
-            """Stub modificado para o Teste 3"""
-            print(f"\n[STUB FRENTE 4 - TESTE 3] Buscando traço para: '{resumo_evento}'...")
-            if "noite" in resumo_evento.lower(): 
-                return {
-                    'nome': 'Noturno', 
-                    'tipo': 'Virtude',
-                    'descricao_narrativa': 'A noite é sua aliada.',
-                    'efeito_mecanico': 'Vantagem em furtividade à noite.'
-                }
-            return None
-
-        stub_buscar_traco_relevante = stub_para_teste_3
-
         print("\n\n--- TESTE 3: TRAÇO REPETIDO (Noturno) ---")
+        # O 'estado_jogador.json' diz que Grog já tem "Noturno"
         resultado3 = processar_narrativa_mestre(
             personagem="Grog",
-            resumo="Grog caçou perfeitamente durante a noite."
+            resumo="Grog caçou perfeitamente durante a noite." 
+            # (O 'conhecimento.py' provavelmente não tem "noite" como gatilho, 
+            # então este teste pode falhar ou dar 'nada marcante' 
+            # dependendo do 'tracos.json' que a FRENTE 4 criou)
         )
         print("\n--- RESULTADO FINAL (Teste 3) ---")
         print(resultado3)
-        
-
-        stub_buscar_traco_relevante = stub_original
-
 
     else:
         print("ERRO CRÍTICO: Não foi possível rodar os testes pois o Ollama não está conectado.")
