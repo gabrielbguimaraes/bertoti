@@ -6,7 +6,7 @@ def testar_conexao_ollama():
 
     try:
         # 1. Inicializa o modelo (aponta para o 'qwen' que baixamos)
-        llm = Ollama(model="qwen")
+        llm = Ollama(model="llama3")
 
         # 2. Prepara um prompt de teste
         prompt_teste = "Qual é a capital do Brasil?"

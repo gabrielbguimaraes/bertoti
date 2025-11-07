@@ -60,10 +60,14 @@ def adicionar_traco(jogador_nome: str, nome_traco: str) -> bool:
 
 # --- Funções do Contrato (Chamadas pela FRENTE 1) ---
 
-def consultar_estado_real(jogador_nome: str) -> Dict[str, Any]:
+def consultar_estado_real(jogador_nome: str, silent: bool = False) -> Dict[str, Any]:
     """Retorna o dicionário de estado do jogador."""
+    if not silent:
+        print(f"\n[FRENTE 3] Consultando estado de {jogador_nome} via memoria.py...")
     return consultar_estado(jogador_nome)
 
-def atualizar_estado_real(jogador_nome: str, novo_traco: str) -> bool:
+def atualizar_estado_real(jogador_nome: str, novo_traco: str, silent: bool = False) -> bool:
     """Adiciona um novo traço. Retorna True se foi adicionado, False se já existia."""
+    if not silent:
+        print(f"\n[FRENTE 3] ATUALIZANDO {jogador_nome} -> Adicionando Traço: {novo_traco} via memoria.py...")
     return adicionar_traco(jogador_nome, novo_traco)

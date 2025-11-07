@@ -16,5 +16,11 @@
     "tipo": "Aflição",
     "descricao_narrativa": "Age sem pensar nas consequências. Lambe cogumelos estranhos, bebe poções desconhecidas, puxa alavancas.",
     "efeito_mecanico": "Desvantagem em testes para evitar armadilhas."
+  },
+  {
+    "nome": "Aracnofobia",
+    "tipo": "Aflição",
+    "descricao_narrativa": "Medo intenso e irracional de aranhas",
+    "efeito_mecanico": "Desvantagem em todos os testes caso o personagem esteja enfrentando um Aracnídeo"
   }
 ]
